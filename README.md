@@ -86,7 +86,7 @@ DataFrame.checkpoint(eager=True)
 Попытки применить *checkpoint* совместно с *persist* не привели к оптимальным результатам. Неуместное использование persist или checkpoint может лишь увеличить времязатратность расчётов. В рамках исследования было принято решение заменить persist на checkpoint:
 
 ```scala
-val persistedSourceDf = sourceDf.persist
+//val persistedSourceDf = sourceDf.persist
 val persistedSourceDf = sourceDf.checkpoint
 ```
 В таблице отражены результаты времязатратности вычислений, при использовании persist и checkpoint:  
@@ -99,5 +99,12 @@ val persistedSourceDf = sourceDf.checkpoint
 |  4 |  89,93 s. | 71,18  s. | 48,33 s.   |  54,22 s.  |  46,58 s. |
 |  5 |  88,99 s. |  70,66 s. |  47,83 s.  |  48,35 s.  |  49,27 s. |
 
+И график. Потому что графики всё делают крутым:
+![](/img/grafic.jpg)
 
-
+Для каждого расчёта использована новая Spark сессия и заново сгенерирован DataFrame. Размер таблицы:
+```scala
+val sizeDataFrame = 8000000
+```
+Был проверен в том числе `localCheckpoint()`. Эффективность localCheckpoint не превзошла checkpoint. По крайней мере в рассматриваемом кейсе.
+*localCheckpoint* призван повысить производительность в за счёт записи данных в память экзекутора. Однако это идёт в ущерб отказоустойчивости. В случае внеплановой смерти экзекутора теряется data-linage и сохранённые файлы датафрейма.
