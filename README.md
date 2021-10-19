@@ -75,6 +75,11 @@ persist vs cashe
 
 checkpoint()
 ------
+Сушествуют альтернативный способ кэширования DataFrame.
+```scala
+DataFrame.checkpoint(eager=True)
+```
+В рамках таски попробуем применить данный вид кэширования. checkpoint() может принимать в качестве аргумента флажок true (no lazy chackpoint) или false (lazy checkpoint). По умолчанию - true.
 
 | Расчёт №  | persist()  | checkpoint()  | chechpoint(false)  | localCheckpoint()  | localCheckpoint(false) |
 | :------------: | :------------: | :------------: | :------------: | :------------: | :------------:|
