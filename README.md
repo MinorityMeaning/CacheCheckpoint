@@ -50,15 +50,17 @@ val schema = StructType(Array(
 
 persist vs cashe
 ------
-Методы кэширования похожи, то есть `cache()` - аналог `persist(StorageLevel.MEMORY_ONLY)`
+Методы кэширования похожи, то есть `cache()` - аналог `persist(StorageLevel.MEMORY_ONLY)`.
 `cashe()` не принимает аргументы, в то время как `persist()` может принимать в качестве аргумента уровень хранения:
-- StorageLevel.MEMORY_AND_DISK (Параметр по умолчанию. Хранит материализованные объекты Row в куче памяти и диске экзекутора, если в памяти закончится место)
-- StorageLevel.DISK_ONLY (Хранит материализованные объекты Row только на диске экзекутора)
-- StorageLevel.MEMORY_ONLY (Хранит материализованные объекты Row только в куче памяти экзекутора)
-- StorageLevel.MEMORY_AND_DISK_SER (Работает как MEMORY_AND_DISK, только сериализует объекты)
-- StorageLevel.MEMORY_ONLY_SER
-- StorageLevel.DISK_ONLY_SER
+- `StorageLevel.MEMORY_AND_DISK` (Параметр по умолчанию. Хранит материализованные объекты Row в куче памяти и диске экзекутора, если в памяти закончится место)
+- `StorageLevel.DISK_ONLY` (Хранит материализованные объекты Row только на диске экзекутора)
+- `StorageLevel.MEMORY_ONLY` (Хранит материализованные объекты Row только в куче памяти экзекутора)
+- `StorageLevel.MEMORY_AND_DISK_SER` (Работает как MEMORY_AND_DISK, только сериализует объекты)
+- `StorageLevel.MEMORY_ONLY_SER`
+- `StorageLevel.DISK_ONLY_SER`
 - и некоторые другие уровни выходящие за рамки рассматриваемой проблемы.
+
+`cache` крайне ограничен в сравнении с `persist` из-за возможности кэшировать объекты только в куче памяти экзекутора. Поэтому попробуем сделать вывод рассмотрев распределение объектов в куче памяти экзекутора:
 
 | Расчёт №  | persist()  | checkpoint()  | chechpoint(false)  | localCheckpoint()  | localCheckpoint(false) |
 | :------------: | :------------: | :------------: | :------------: | :------------: | :------------:|
