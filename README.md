@@ -99,12 +99,46 @@ val persistedSourceDf = sourceDf.checkpoint
 |  4 |  89,93 s. | 71,18  s. | 48,33 s.   |  54,22 s.  |  46,58 s. |
 |  5 |  88,99 s. |  70,66 s. |  47,83 s.  |  48,35 s.  |  49,27 s. |
 
-И график. Потому что графики всё делают крутым:
+И график. Чтобы был:
 ![](/img/grafic.jpg)
 
 Для каждого расчёта использована новая Spark сессия и заново сгенерирован DataFrame. Размер таблицы:
 ```scala
 val sizeDataFrame = 8000000
 ```
-Был проверен в том числе `localCheckpoint()`. Эффективность localCheckpoint не превзошла checkpoint. По крайней мере в рассматриваемом кейсе.
+Был проверен в том числе `localCheckpoint()`. Эффективность *localCheckpoint* не превзошла *checkpoint*. По крайней мере в рассматриваемом кейсе.
 *localCheckpoint* призван повысить производительность в за счёт записи данных в память экзекутора. Однако это идёт в ущерб отказоустойчивости. В случае внеплановой смерти экзекутора теряется data-linage и сохранённые файлы датафрейма.
+
+Ещё немного о checkpoint()
+-------
+| Плюсы  | Минусы  |
+| :------------: | :------------: |
+| При чрезмерно большом объёме данных помогает эффективнее кэшировать, за счёт сериализации объектов и экономии памяти JVM | Удаляется data-leanege, иногда она необходима.  |
+| Сохраняются файлы кеша на HDFS. Могут быть использованы для повторных расчётов в будущем.  | Сохраняются файлы кеша на HDFS. Возникает необходимость ручного удаления папки с кэшем.  |
+| Удаляется data-leanege. В случае чрезмерно длинного data-leanege, будет позволять оптимизировать дальнейшие расчёты |   |
+|   |   |
+
+### Плюс к эффективности
+Можно достичь небольшого прироста производительности на уровне сериализации. При работе с сериализацией объектов Spark настоятельно рекомендует воспользоваться своей версией сериализатора *Kryo*. Он работает немного эффективнее. Подключите сериализатор этапе настройки будущей сессии:
+```scala
+.config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+```
+
+## Удаление каталога checkpoint из hdfs:
+
+```scala
+import org.apache.spark.sql.SparkSession
+import org.apache.hadoop.fs.{FileSystem, Path}
+
+.....
+
+spark.sparkContext.setCheckpointDir("C:\\Users\\Abdullaev2-AM\\Documents\\checkpoints")
+val pathCheckpoint = spark.sparkContext.getCheckpointDir
+ 
+val fs = FileSystem.get(spark.sparkContext.hadoopConfiguration)
+val outputPath = new Path(pathCheckpoint.get)
+if(fs.exists(outputPath))
+  fs.delete(outputPath, true)
+  
+  .....
+```
